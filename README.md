@@ -7,7 +7,7 @@
   npm install
   node server.js
 ```
-## Configurations
+### Configurations
   ```
     PORT=[port] HOST=[host address] MAXCONNECTIONS=[number] node server.js
   ```
