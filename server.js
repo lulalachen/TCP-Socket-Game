@@ -14,7 +14,6 @@ server.on('connection',function(socket){
     broadcast(cli.yellow(socket.name) + cli.yellow(" > ") + data, socket);
     router(data.toString(), socket);
   })
-
   // Remove the client from the list when it leaves
   socket.on('end', function () {
     server.clients.splice(server.clients.indexOf(socket), 1);
@@ -32,6 +31,7 @@ function router(data, socket){
   if (api !== undefined ) {
     routes.forEach(function(rt){
       if (rt.api === api){
+        console.log(cli.green(JSON.stringify(data.data)));
         if (typeof(rt.exec) !== 'function'){
           socket.write( JSON.stringify(rt.response) )
         } else if (jsonData !== undefined){

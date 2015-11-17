@@ -1,5 +1,9 @@
+var host = process.env.HOST || '127.0.0.1',
+    port = process.env.PORT || 3000,
+    maxConnections = process.env.MAXCONNECTIONS || 10;
+
 module.exports = {
-  'port' : 3000,
-  'host' : '127.0.0.1',
-  'maxConnections' : 10
+  'port' : port,
+  'host' : host,
+  'maxConnections' : maxConnections
 }

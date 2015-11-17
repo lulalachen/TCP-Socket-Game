@@ -9,9 +9,9 @@ var clients = [];
 
 var server = net.createServer(function(socket) {
   socket.name = socket.remoteAddress + ":" + socket.remotePort
-  var user = new User({
-    id : socket.remotePort
-  });
+  // var user = new User({
+  //   id : socket.remotePort
+  // });
   clients.push(socket);
 });
 

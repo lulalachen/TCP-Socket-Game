@@ -10,10 +10,7 @@
     "commander": "^2.9.0",
     "terminal-kit": "^0.15.11",
     "json-socket": "^0.1.2",
-    "terminal-menu": "^2.1.1",
-    "model": "^6.0.1",
-    "terminal-menu-program": "^0.0.17",
-    "pn": "^1.0.0"
+    "terminal-menu": "^2.1.1"
   },
   "devDependencies": {},
   "scripts": {

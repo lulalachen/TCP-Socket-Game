@@ -1,5 +1,5 @@
 var game1 = require('./guessNumber'),
-    game2 = require('./blackjack'),
+    game2 = require('./blackjack/blackjack'),
     User = require('./user'),
     Room  = require('./room'),
     users = [],
@@ -73,11 +73,14 @@ var routes = [{
       game : data.game,
       clients : [socket.remotePort],
     });
-    console.log(room);
     rooms.push(room);
+    console.log('/' + data.game);
     socket.write(JSON.stringify({
       'next' : '/' + data.game,
-      'msg':'Room ' + room.id() + ' created.\n'
+      'msg':'Room ' + room.id() + ' created.\n',
+      'data':{
+        roomId : room.id()
+      }
     }))
   }
 },{
@@ -91,15 +94,18 @@ var routes = [{
         room.clients().push(socket.remotePort);
         console.log(room.clients());
         socket.write(JSON.stringify({
-          'next' : '/' + room.game(),
-          'msg':'Room ' + room.id() + ' joined.\n'
+          'next' : '/' + room.game() + '/check',
+          'msg':'Room ' + room.id() + ' joined.\n',
+          'data':{
+            roomId : room.id()
+          }
         }))
       }
     })
     if (toggle){
       socket.write(JSON.stringify({
-        'next' : '/newroom',
-        'msg':'Room ' + data.data.game + ' not found.\nCreate a new room?\n'
+        'next' : '/neworjoin',
+        'msg':'Room ' + data + ' not found.\nCreate a new room?\n'
       }))
     }
 
@@ -114,41 +120,65 @@ var routes = [{
 },{
   'api' : '/game1', // Guess number
   exec : function(data, socket){
-    game1.start();
+    game1.start(data.roomId);
     socket.write(JSON.stringify({
       'status':'success',
       'next' : '/game1/check',
-      'msg':'Have fun in Guess Number.\n'
+      'msg':'Have fun in Guess Number.\n',
+      'data':{
+        roomId : data.roomId
+      }
     }));
   }
 },{
   'api' : '/game1/check', // Guess number check
 
   exec : function(data, socket){
-    var result = game1.check(data.toString());
-    var status = (result === 'done') ? true : false;
-    var next = (result === 'done') ? '/choosegame' : '/game1/check';
-    result = (result === 'done') ? game1.final()+ '\n' + 'Congratulations!\n' + 'Want to play other games?' : result;
+    var result = game1.check(data.guess, socket.remotePort, data.roomId);
+    var status = (result === 'done' || result === 'gameover') ? result : '';
+    var next = '';
+
+    if (status === 'done'){
+      result = game1.final(socket.remotePort, data.roomId)+ '\n' + 'Congratulations!\nYou made it.\nLet\'s wait for others.....';
+      next = '/wait';
+    } else if (status === 'gameover') {
+      result = result;
+      next = '/choosegame';
+    } else {
+      next = '/game1/check';
+    }
+
+
     var res = {
-      'status' : status,
       'next' : next,
-      'msg' : result
+      'msg' : result,
+      'data':{
+        status : status,
+        roomId : data.roomId
+      }
     }
     socket.write(JSON.stringify(res));
   }
 },{
   'api' : '/game2', // Blackjack
-  'response' : {
-    'status':'success',
-    'next' : '',
-    'msg':'Have fun in Blackjack.\n'
+  exec : function(data, socket){
+    var game2Single = game2.newGame(socket.remotePort, data.roomId);
+    console.log( data);
+    console.log(game2Single.isInProgress());
+    socket.write(JSON.stringify({
+      'status':'success',
+      'next' : '/game2/waitForOthers',
+      'msg':'Have fun in Blackjack.\nWait for other player or start?',
+      'data':{
+        roomId : data.roomId,
+        game : game2Single
+      }
+    }));
   }
 },{
-  'api' : '/game2', // Blackjack check
-  'response' : {
-    'status':'success',
-    'next' : '',
-    'msg':'Have fun in Blackjack.\n'
+  'api' : '/game2/initalDeal', // Blackjack deal
+  exec : function(data, socket){
+
   }
 },{
   'api' : '/gamefinish',

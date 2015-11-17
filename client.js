@@ -34,12 +34,6 @@ client.connect(config.port, config.host, function() {
 
 });
 
-
-// term.clear() ;
-
-
-
-
 process.stdin.on('data', function (data) {
   if ((new String(data)).toLowerCase() === 'exit\n') {
       client.write('exit');
@@ -56,12 +50,12 @@ client.on('data', function(data) {
 function router(data, client){
   var data = JSON.parse(data) || undefined;
   var api = data.next || undefined;
-  var msg = data.msg || undefined;
+  var jsonData = data.data || undefined;
 
   if (api !== undefined) {
     routes.forEach(function(val){
       if (val.nextApi === api)
-        val.exec(data);
+        val.exec(jsonData);
     })
 
   } else {
@@ -208,19 +202,24 @@ var routes = [
   'nextApi' : '/game1',
   exec : function(data){
     client.write(JSON.stringify({
-        'api' : '/game1',
-        'data' : ''
-      }));
+      'api' : '/game1',
+      'data' : {
+        roomId : data.roomId
+      }
+    }));
   }
 },
 {
   'nextApi' : '/game1/check',
   exec : function(data){
-    rl.question("Guess a number!",function(data){
-      console.log("Guess : " + data);
+    rl.question("Guess a number!",function(guess){
+      console.log("Guess : " + guess);
       client.write(JSON.stringify({
         'api' : '/game1/check',
-        'data' : data
+        'data' : {
+          roomId : data.roomId,
+          guess : guess
+        }
       }))
     });
   }
@@ -228,7 +227,30 @@ var routes = [
 {
   'nextApi' : '/game2',
   exec : function(data){
+    console.log(data);
+    client.write(JSON.stringify({
+      'api' : '/game2',
+      'data' : {
+        roomId : data.roomId
+      }
+    }));
+  }
+},
+{
+  'nextApi' : '/game2/waitForOthers',
+  exec : function(data){
+    console.log(data.game);
+    term.singleLineMenu( ['Start'] , function( error , response ) {
+      if (response.selectedText === 'Start') {
+        client.write(JSON.stringify({
+          'api' : '/game2/initalDeal',
+          'data' : {
+            roomId : data.roomId
+          }
+        }))
+      }
 
+    });
   }
 },
 {
